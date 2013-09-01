@@ -1,4 +1,8 @@
-var drawTimeout = null;
+
+var drawTimeout = null;	
+// ideally, we wouldn't need `running` since the `play` event on the <video>
+// would fire after the stream was setup, but this is not the case in Firefox.
+var running = false;
 document.addEventListener('DOMContentLoaded', function(){
   var v = document.getElementById('v');
   var canvas = document.getElementById('c');
@@ -8,32 +12,46 @@ document.addEventListener('DOMContentLoaded', function(){
   var cw,ch;
 
   v.addEventListener('play', function(){
-    cw = v.clientWidth;
-    ch = v.clientHeight;
-    canvas.width = cw;
-    canvas.height = ch;
-    back.width = cw;
-    back.height = ch;
+    var dimensions = setDimensions(v, canvas, back);
+    cw = dimensions.w, ch = dimensions.h;
     draw(v,context,backcontext,cw,ch,1);
   },false);
 
 },false);
 
+function setDimensions(v,canvas,back) {
+  cw = v.clientWidth;
+  ch = v.clientHeight;
+  canvas.width = cw;
+  canvas.height = ch;
+  back.width = cw;
+  back.height = ch;
+  return { w : cw, h : ch };
+}
+
 function draw(v,c,bc,w,h,value) {
-  if(v.paused || v.ended) return false;
+  if(v.paused || v.ended) { return false; }
   // First, draw it into the backing canvas
   try {
+    console.log(v.clientWidth);
+    bc.drawImage(v,0,0,w,h);
+  } catch (e) {
     /*
      * Firefox seems to screw up sometimes; even after `play`, `playing`
      * and `canplay` events have been fired on the <video>, it throws
      * an error on drawImage. If that happens, just wait it out.
-     * https://bugzilla.mozilla.org/show_bug.cgi?id=771833
      */
-    bc.drawImage(v,0,0,w,h);
-  } catch (e) {
+    console.log(e);
     drawTimeout = setTimeout(function(){ draw(v,c,bc,w,h,value); }, 0);
     return;
   }
+  if (!running) { // first time we succeeded in drawing video to canvas
+    // in Firefox, video size sometimes changes
+    var dimensions = setDimensions(v, c.canvas, bc.canvas);
+    w = dimensions.w, h = dimensions.h;
+  }
+  running = true;
+
   // Grab the pixel data from the backing canvas
   var idata = bc.getImageData(0,0,w,h);
   var data = idata.data;
