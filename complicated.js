@@ -22,7 +22,18 @@ document.addEventListener('DOMContentLoaded', function(){
 function draw(v,c,bc,w,h,value) {
   if(v.paused || v.ended) return false;
   // First, draw it into the backing canvas
-  bc.drawImage(v,0,0,w,h);
+  try {
+    /*
+     * Firefox seems to screw up sometimes; even after `play`, `playing`
+     * and `canplay` events have been fired on the <video>, it throws
+     * an error on drawImage. If that happens, just wait it out.
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=771833
+     */
+    bc.drawImage(v,0,0,w,h);
+  } catch (e) {
+    drawTimeout = setTimeout(function(){ draw(v,c,bc,w,h,value); }, 0);
+    return;
+  }
   // Grab the pixel data from the backing canvas
   var idata = bc.getImageData(0,0,w,h);
   var data = idata.data;
