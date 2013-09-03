@@ -69,5 +69,13 @@ function draw(v,c,bc,w,h,value) {
   // Draw the pixels onto the visible canvas
   c.putImageData(idata,0,0);
   // Start over!
-  drawTimeout = setTimeout(function(){ draw(v,c,bc,w,h,value); }, 0);
+  drawTimeout = setTimeout(function(){ draw(v,c,bc,w,h,value); }, 0); 
+}
+function download() { 
+    var canvas = document.getElementById("c");
+    var img    = canvas.toDataURL("image/jpg");
+    window.open(
+      img,
+      '_blank' // <- This is what makes it open in a new window.
+    );
 }
