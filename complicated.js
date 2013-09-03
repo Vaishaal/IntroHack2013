@@ -33,7 +33,6 @@ function draw(v,c,bc,w,h,value) {
   if(v.paused || v.ended) { return false; }
   // First, draw it into the backing canvas
   try {
-    console.log(v.clientWidth);
     bc.drawImage(v,0,0,w,h);
   } catch (e) {
     /*
